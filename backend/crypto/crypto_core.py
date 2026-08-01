@@ -134,3 +134,60 @@ def rotate_session_key():
     """
 
     return AESGCM.generate_key(bit_length=256)
+SIGNATURE_ALGORITHM = "ML-DSA-65"
+
+
+def generate_signing_keypair():
+    """
+    Generates a long-term ML-DSA signing key pair.
+
+    Returns:
+        tuple: (public_key, private_key)
+    """
+
+    with oqs.Signature(SIGNATURE_ALGORITHM) as signer:
+
+        public_key = signer.generate_keypair()
+
+        private_key = signer.export_secret_key()
+
+    return public_key, private_key
+def sign(private_key, message):
+    """
+    Signs a message using the ML-DSA private key.
+
+    Args:
+        private_key (bytes): ML-DSA private key
+        message (bytes): Message to sign
+
+    Returns:
+        bytes: Digital signature
+    """
+
+    with oqs.Signature(SIGNATURE_ALGORITHM, private_key) as signer:
+
+        signature = signer.sign(message)
+
+    return signature
+def verify(public_key, message, signature):
+    """
+    Verifies an ML-DSA digital signature.
+
+    Args:
+        public_key (bytes): ML-DSA public key
+        message (bytes): Original message
+        signature (bytes): Digital signature
+
+    Returns:
+        bool: True if signature is valid, otherwise False
+    """
+
+    with oqs.Signature(SIGNATURE_ALGORITHM) as verifier:
+
+        is_valid = verifier.verify(
+            message,
+            signature,
+            public_key
+        )
+
+    return is_valid
