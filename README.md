@@ -1,21 +1,20 @@
-# SecureDrone
+# 🚁 SecureDrone
 
-A Secure Autonomous Drone Framework using PX4, MAVSDK and Post-Quantum Cryptography.
+> A Post-Quantum Secure Drone Communication System using ML-KEM, ML-DSA and AES-256-GCM.
 
-## Team
+---
 
-Dhruvi
-...
+## 📌 Project Overview
 
-## Technologies
+SecureDrone is a software-based drone security framework that integrates **Post-Quantum Cryptography (PQC)** with the PX4 drone ecosystem.
 
-- PX4 Autopilot
-- Gazebo
+The project focuses on protecting drone communication against future quantum attacks while maintaining secure telemetry exchange and drone control.
+
+The system currently supports:
+
+- ML-KEM (Post-Quantum Key Exchange)
+- ML-DSA (Digital Signatures)
+- AES-256-GCM Secure Communication
+- PX4 SITL
+- Gazebo Simulator
 - MAVSDK
-- Python
-- ML-KEM (Kyber)
-- ML-DSA (Dilithium)
-
-## Project Goal
-
-Develop a secure autonomous drone communication framework protected against quantum attacks.
