@@ -15,11 +15,11 @@ class SecureHandshake:
     """
 
     @staticmethod
-    def establish(identity, ca_public_key):
+    def establish(identity, certificate_authority):
 
         if not Authenticator.authenticate(
             identity,
-            ca_public_key
+            certificate_authority.keys.public_key
         ):
             raise Exception(
                 "Authentication Failed"

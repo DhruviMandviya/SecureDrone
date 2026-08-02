@@ -3,6 +3,10 @@ import json
 import base64
 import oqs
 
+from backend.certificates.certificate import (
+    Certificate,
+    create_certificate
+)
 from backend.security.keypair import KeyPair
 
 from dataclasses import asdict
@@ -87,6 +91,27 @@ class CertificateAuthority:
             )
 
         print("✓ CA Keys Loaded Successfully")
+    def issue_certificate(
+        self,
+        device_id: str,
+        device_type: str,
+        public_key: bytes
+    ):
+        """
+        Creates and signs a certificate.
+        """
+
+        certificate = create_certificate(
+            device_id=device_id,
+            device_type=device_type,
+            public_key=base64.b64encode(
+                public_key
+            ).decode()
+        )
+
+        return self.sign_certificate(
+            certificate
+    )   
     def sign_certificate(self, certificate: Certificate):
         """
         Sign a certificate using the CA private key.
