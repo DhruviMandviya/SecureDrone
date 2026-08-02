@@ -25,3 +25,8 @@ Thumbs.db
 
 # Python cache
 .pytest_cache/
+# Certificate Keys (Generated During Testing)
+backend/certificates/data/keys/
+
+# Generated Test Certificates
+backend/certificates/data/certs/*.json
