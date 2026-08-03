@@ -1,12 +1,33 @@
 import asyncio
 
+from backend.certificates.ca import CertificateAuthority
+from backend.authentication.identity import DeviceIdentity
+
+from backend.drone.authentication_client import AuthenticationClient
+from backend.drone.handshake_client import HandshakeClient
+from backend.drone.ground_station_client import GroundStationClient
+
 from backend.drone.px4_connection import PX4Connection
 from backend.drone.telemetry_reader import TelemetryReader
 from backend.drone.drone_controller import DroneController
-from backend.certificates.ca import CertificateAuthority
-from backend.authentication.identity import DeviceIdentity
-from backend.authentication.handshake import SecureHandshake
 from backend.drone.secure_telemetry import SecureTelemetry
+
+from backend.crypto.crypto_core import (
+    encapsulate,
+    derive_session_key
+)
+
+
+class Session:
+    """
+    Holds the AES session key.
+    """
+
+    def __init__(self, session_key):
+
+        self.session_key = session_key
+
+
 async def main():
 
     print("=" * 70)
@@ -16,6 +37,7 @@ async def main():
     connection = PX4Connection()
 
     drone = await connection.connect()
+
     print()
     print("Creating Secure Session...")
 
@@ -29,18 +51,56 @@ async def main():
         ca
     )
 
-    session = SecureHandshake.establish(
+    authentication = AuthenticationClient()
+
+    handshake = HandshakeClient()
+
+    ground_station = GroundStationClient()
+
+    authentication.authenticate(
         identity,
-        ca
+        None
     )
 
-    secure_channel = SecureTelemetry(session)
-    print("✓ Secure Session Established")
+    print()
+
+    print("Requesting Ground Station Public Key...")
+
+    handshake_response = handshake.start()
+
+    ground_station_public_key = bytes.fromhex(
+        handshake_response["public_key"]
+    )
+
+    ciphertext, shared_secret = encapsulate(
+        ground_station_public_key
+    )
+
+    session_key = derive_session_key(
+        shared_secret
+    )
+
+    handshake.complete(
+        identity.device_id,
+        ciphertext
+    )
+
+    session = Session(
+        session_key
+    )
+
+    secure_channel = SecureTelemetry(
+        session
+    )
+
+    print("✓ Real ML-KEM Handshake Completed")
+
     controller = DroneController(drone)
 
     reader = TelemetryReader(drone)
 
     telemetry = await reader.read_telemetry()
+
     state = reader.get_state()
 
     print()
@@ -50,7 +110,7 @@ async def main():
     print()
     print("Live Telemetry")
     print(telemetry)
-    print()
+
     print()
     print("Encrypting Telemetry...")
 
@@ -59,9 +119,21 @@ async def main():
     )
 
     print()
+
     print("Encrypted Packet")
     print(encrypted_packet)
+
     print()
+
+    response = ground_station.send(
+        encrypted_packet
+    )
+
+    print("Ground Station Response")
+    print(response)
+
+    print()
+
     print("Decrypting Telemetry...")
 
     decrypted_packet = secure_channel.decrypt(
@@ -69,26 +141,38 @@ async def main():
     )
 
     print()
+
     print("Recovered Telemetry")
     print(decrypted_packet)
+
+    print()
 
     print("Arming Test")
 
     await controller.arm()
+
     print()
+
     print("Takeoff Test")
 
     await controller.takeoff()
+
     print()
+
     print("Hovering for 10 seconds...")
 
     await asyncio.sleep(10)
+
     print()
+
     print("Landing Test")
 
     await controller.land()
+
     await asyncio.sleep(10)
+
     print()
+
     print("Disarm Test")
 
     await controller.disarm()
