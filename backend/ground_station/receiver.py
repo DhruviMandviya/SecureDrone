@@ -10,7 +10,9 @@ from backend.ground_station.session_manager import (
 from backend.ground_station.secure_receiver import (
     SecureReceiver
 )
-
+from backend.ground_station.telemetry_store import (
+    TelemetryStore
+)
 
 class GroundStationReceiver:
     """
@@ -44,13 +46,24 @@ class GroundStationReceiver:
         packet_data.pop("device_id")
 
         telemetry = receiver.decrypt(
-            packet_data
+    packet_data
+)
+
+        TelemetryStore.add(
+            telemetry
         )
 
         print()
+
         print("Recovered Telemetry")
 
         print(telemetry)
+
+        print()
+
+        print(
+            f"Telemetry History Size : {len(TelemetryStore.all())}"
+        )
 
         return GroundStationResponse(
             status="success",

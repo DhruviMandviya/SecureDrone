@@ -16,6 +16,9 @@ from backend.crypto.crypto_core import (
     encapsulate,
     derive_session_key
 )
+from backend.drone.telemetry_streamer import (
+    TelemetryStreamer
+)
 
 
 class Session:
@@ -118,64 +121,45 @@ async def main():
         telemetry
     )
 
-    print()
+    streamer = TelemetryStreamer(
+    reader,
+    secure_channel,
+    ground_station
+)
 
-    print("Encrypted Packet")
-    print(encrypted_packet)
+    await streamer.stream()
 
-    print()
+    # print()
 
-    response = ground_station.send(
-        encrypted_packet
-    )
+    # print("Arming Test")
 
-    print("Ground Station Response")
-    print(response)
+    # await controller.arm()
 
-    print()
+    # print()
 
-    print("Decrypting Telemetry...")
+    # print("Takeoff Test")
 
-    decrypted_packet = secure_channel.decrypt(
-        encrypted_packet
-    )
+    # await controller.takeoff()
 
-    print()
+    # print()
 
-    print("Recovered Telemetry")
-    print(decrypted_packet)
+    # print("Hovering for 10 seconds...")
 
-    print()
+    # await asyncio.sleep(10)
 
-    print("Arming Test")
+    # print()
 
-    await controller.arm()
+    # print("Landing Test")
 
-    print()
+    # await controller.land()
 
-    print("Takeoff Test")
+    # await asyncio.sleep(10)
 
-    await controller.takeoff()
+    # print()
 
-    print()
+    # print("Disarm Test")
 
-    print("Hovering for 10 seconds...")
-
-    await asyncio.sleep(10)
-
-    print()
-
-    print("Landing Test")
-
-    await controller.land()
-
-    await asyncio.sleep(10)
-
-    print()
-
-    print("Disarm Test")
-
-    await controller.disarm()
+    # await controller.disarm()
 
 
 if __name__ == "__main__":

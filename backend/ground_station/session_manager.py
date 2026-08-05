@@ -27,3 +27,9 @@ class SessionManager:
         return cls.sessions.get(
             device_id
         )
+    @classmethod
+    def all(cls):
+
+        return list(
+            cls.sessions.keys()
+        )

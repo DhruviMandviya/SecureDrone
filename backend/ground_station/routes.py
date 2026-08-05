@@ -24,6 +24,9 @@ from backend.ground_station.models import (
 from backend.ground_station.session_manager import (
     SessionManager
 )
+from backend.ground_station.telemetry_store import (
+    TelemetryStore
+)
 router = APIRouter()
 handshake = HandshakeManager()
 CURRENT_SESSION = None
@@ -87,3 +90,43 @@ async def receive_telemetry(
     return GroundStationReceiver.receive(
         packet
     )
+@router.get("/telemetry/latest")
+async def latest_telemetry():
+
+    latest = TelemetryStore.latest()
+
+    if latest is None:
+
+        return {
+            "status": "No Telemetry"
+        }
+
+    return latest
+@router.get("/telemetry/history")
+async def telemetry_history():
+
+    return TelemetryStore.all()
+@router.get("/sessions")
+async def active_sessions():
+
+    return {
+        "active_sessions": SessionManager.all(),
+        "count": len(
+            SessionManager.all()
+        )
+    }
+@router.get("/status")
+async def system_status():
+
+    latest = TelemetryStore.latest()
+
+    return {
+        "ground_station": "Running",
+        "active_sessions": len(
+            SessionManager.all()
+        ),
+        "telemetry_packets": len(
+            TelemetryStore.all()
+        ),
+        "latest_available": latest is not None
+    }
