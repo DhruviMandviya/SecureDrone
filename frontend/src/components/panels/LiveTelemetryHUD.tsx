@@ -5,34 +5,30 @@ import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../lib/api';
 
 export const LiveTelemetryHUD: React.FC = () => {
+
   const { data: telemetry, loading } = usePolling(
     api.getTelemetryLatest,
     1000,
     true
   );
 
-  if (loading && !telemetry) {
+  // No telemetry yet
+  if (
+    !telemetry ||
+    typeof telemetry.battery !== "number"
+  ) {
     return (
-      <Panel title="Live Telemetry">
-        <div className="flex items-center justify-center h-full text-signal-cyan">
-          ACQUIRING SIGNAL...
-        </div>
-      </Panel>
-    );
-  }
-
-  if (!telemetry) {
-    return (
-      <Panel title="Live Telemetry">
-        <div className="flex items-center justify-center h-full text-alert-red">
-          NO TELEMETRY
+      <Panel title="Live Telemetry HUD" className="h-full">
+        <div className="flex items-center justify-center h-full text-signal-cyan font-mono">
+          ACQUIRING TELEMETRY...
         </div>
       </Panel>
     );
   }
 
   return (
-    <Panel title="Live Telemetry" className="h-full">
+    <Panel title="Live Telemetry HUD" className="h-full">
+
       <div className="grid grid-cols-2 gap-4">
 
         <DataReadout
@@ -40,7 +36,7 @@ export const LiveTelemetryHUD: React.FC = () => {
           value={telemetry.battery.toFixed(1)}
           unit="%"
           size="md"
-          color={telemetry.battery > 20 ? 'text-signal-green' : 'text-alert-red'}
+          color={telemetry.battery > 20 ? "text-signal-green" : "text-alert-red"}
         />
 
         <DataReadout
@@ -68,17 +64,28 @@ export const LiveTelemetryHUD: React.FC = () => {
         />
 
         <div className="col-span-2 border-t border-tactical-border pt-3">
+
           <div className="text-xs text-tactical-text mb-2">
             COORDINATES
           </div>
 
           <div className="font-mono text-signal-cyan flex justify-between">
-            <span>LAT: {telemetry.latitude.toFixed(6)}</span>
-            <span>LON: {telemetry.longitude.toFixed(6)}</span>
+
+            <span>
+              LAT: {telemetry.latitude.toFixed(6)}
+            </span>
+
+            <span>
+              LON: {telemetry.longitude.toFixed(6)}
+            </span>
+
           </div>
+
         </div>
 
       </div>
+
     </Panel>
   );
+
 };

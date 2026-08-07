@@ -1,5 +1,17 @@
 import asyncio
+import requests
 from mavsdk import System
+
+
+def update_mission(status):
+    try:
+        requests.post(
+            "http://127.0.0.1:8000/mission/update",
+            json={"status": status},
+            timeout=2
+        )
+    except Exception:
+        pass
 
 
 class DroneController:
@@ -22,21 +34,35 @@ class DroneController:
 
         await asyncio.sleep(2)
 
+        # ARM
+        update_mission("ARMING")
         await self.arm()
+
+        update_mission("ARMED")
 
         await asyncio.sleep(3)
 
+        # TAKEOFF
         await self.takeoff()
 
+        update_mission("TAKEOFF")
+
         print("Hovering...")
+        update_mission("HOVERING")
+
         await asyncio.sleep(15)
 
+        # LAND
+        update_mission("LANDING")
         await self.land()
 
         print("Waiting for landing...")
         await asyncio.sleep(15)
 
+        # DISARM
         await self.disarm()
+
+        update_mission("COMPLETED")
 
         print("✓ Mission Completed")
 

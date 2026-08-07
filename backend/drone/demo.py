@@ -1,5 +1,5 @@
 import asyncio
-
+import requests
 from backend.certificates.ca import CertificateAuthority
 from backend.authentication.identity import DeviceIdentity
 
@@ -22,6 +22,16 @@ from backend.drone.telemetry_streamer import (
 )
 
 
+def update_mission(status):
+    try:
+        requests.post(
+            "http://127.0.0.1:8000/mission/update",
+            json={"status": status},
+            timeout=2
+        )
+    except Exception:
+        pass
+
 class Session:
     """
     Holds the AES session key.
@@ -29,6 +39,7 @@ class Session:
 
     def __init__(self, session_key):
         self.session_key = session_key
+
 
 
 async def main():
@@ -68,6 +79,7 @@ async def main():
         identity,
         None
     )
+    update_mission("AUTHENTICATED")
 
     print()
     print("Requesting Ground Station Public Key...")
@@ -90,6 +102,7 @@ async def main():
         identity.device_id,
         ciphertext
     )
+    update_mission("HANDSHAKE")
 
     session = Session(session_key)
 
@@ -151,6 +164,7 @@ async def main():
 
     try:
         await telemetry_task
+        
     except asyncio.CancelledError:
         pass
 

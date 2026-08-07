@@ -10,7 +10,7 @@ import { LiveChartsPanel } from './components/panels/LiveChartsPanel';
 import { DataTablesPanel } from './components/panels/DataTablesPanel';
 import { LogFeedPanel } from './components/panels/LogFeedPanel';
 import { DataStatsPanel } from './components/panels/DataStatsPanel';
-
+import { MissionProgressPanel } from './components/panels/MissionProgressPanel';
 function App() {
   return (
     <div className="min-h-screen bg-tactical-bg text-tactical-text flex flex-col font-sans overflow-x-hidden selection:bg-signal-cyan/30">
@@ -24,7 +24,7 @@ function App() {
           <SystemHealthPanel />
           <DroneStatusPanel />
           <CryptoStatusPanel />
-          <AESStatusPanel />
+          <MissionProgressPanel />
         </div>
 
         {/* CENTER COLUMN: Tactical View & Telemetry */}

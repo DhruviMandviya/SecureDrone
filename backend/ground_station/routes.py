@@ -27,11 +27,15 @@ from backend.ground_station.session_manager import (
 from backend.ground_station.telemetry_store import (
     TelemetryStore
 )
+from backend.ground_station.mission_store import MissionStore
 from backend.ground_station.log_store import LogStore
 router = APIRouter()
 handshake = HandshakeManager()
 CURRENT_SESSION = None
+from pydantic import BaseModel
 
+class MissionRequest(BaseModel):
+    status: str
 
 @router.post("/authenticate")
 async def authenticate(
@@ -107,7 +111,7 @@ async def latest_telemetry():
     print("============================")
 
     if latest is None:
-        return {"status": "No Telemetry"}
+        return {}
 
     return jsonable_encoder(latest)
 @router.get("/telemetry/history")
@@ -151,3 +155,17 @@ async def system_status():
 async def logs():
 
     return LogStore.all()
+@router.get("/mission")
+async def mission():
+
+    return {
+        "status": MissionStore.get()
+    }
+@router.post("/mission/update")
+async def mission_update(request: MissionRequest):
+
+    MissionStore.set(request.status)
+
+    return {
+        "status": "ok"
+    }
