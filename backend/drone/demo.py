@@ -16,6 +16,7 @@ from backend.crypto.crypto_core import (
     encapsulate,
     derive_session_key
 )
+
 from backend.drone.telemetry_streamer import (
     TelemetryStreamer
 )
@@ -27,7 +28,6 @@ class Session:
     """
 
     def __init__(self, session_key):
-
         self.session_key = session_key
 
 
@@ -37,15 +37,21 @@ async def main():
     print("SecureDrone Live Telemetry Demo")
     print("=" * 70)
 
-    connection = PX4Connection()
+    # -------------------------------------------------
+    # CONNECT TO PX4
+    # -------------------------------------------------
 
+    connection = PX4Connection()
     drone = await connection.connect()
+
+    # -------------------------------------------------
+    # CREATE SECURE SESSION
+    # -------------------------------------------------
 
     print()
     print("Creating Secure Session...")
 
     ca = CertificateAuthority()
-
     ca.generate_keys()
 
     identity = DeviceIdentity.create(
@@ -55,9 +61,7 @@ async def main():
     )
 
     authentication = AuthenticationClient()
-
     handshake = HandshakeClient()
-
     ground_station = GroundStationClient()
 
     authentication.authenticate(
@@ -66,7 +70,6 @@ async def main():
     )
 
     print()
-
     print("Requesting Ground Station Public Key...")
 
     handshake_response = handshake.start()
@@ -88,15 +91,15 @@ async def main():
         ciphertext
     )
 
-    session = Session(
-        session_key
-    )
+    session = Session(session_key)
 
-    secure_channel = SecureTelemetry(
-        session
-    )
+    secure_channel = SecureTelemetry(session)
 
     print("✓ Real ML-KEM Handshake Completed")
+
+    # -------------------------------------------------
+    # DRONE OBJECTS
+    # -------------------------------------------------
 
     controller = DroneController(drone)
 
@@ -117,51 +120,40 @@ async def main():
     print()
     print("Encrypting Telemetry...")
 
-    encrypted_packet = secure_channel.encrypt(
-        telemetry
-    )
+    secure_channel.encrypt(telemetry)
+
+    # -------------------------------------------------
+    # START LIVE TELEMETRY
+    # -------------------------------------------------
 
     streamer = TelemetryStreamer(
     reader,
     secure_channel,
     ground_station
-)
+    )
 
-    await streamer.stream()
+    print()
+    print("=" * 60)
+    print("LIVE TELEMETRY STARTED")
+    print("=" * 60)
 
-    # print()
+    telemetry_task = asyncio.create_task(
+        streamer.stream()
+    )
 
-    # print("Arming Test")
+    mission_task = asyncio.create_task(
+        controller.demo_mission()
+    )
 
-    # await controller.arm()
+    await mission_task
 
-    # print()
+    telemetry_task.cancel()
 
-    # print("Takeoff Test")
-
-    # await controller.takeoff()
-
-    # print()
-
-    # print("Hovering for 10 seconds...")
-
-    # await asyncio.sleep(10)
-
-    # print()
-
-    # print("Landing Test")
-
-    # await controller.land()
-
-    # await asyncio.sleep(10)
-
-    # print()
-
-    # print("Disarm Test")
-
-    # await controller.disarm()
+    try:
+        await telemetry_task
+    except asyncio.CancelledError:
+        pass
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())

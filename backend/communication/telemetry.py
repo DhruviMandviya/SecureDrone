@@ -1,8 +1,11 @@
 from dataclasses import dataclass, asdict
+from datetime import datetime
 
 
 @dataclass
 class Telemetry:
+
+    timestamp: str
 
     latitude: float
 
@@ -20,13 +23,14 @@ class Telemetry:
 
     yaw: float
 
+    gps_sats: int
+
+    mode: str
+
+    armed: bool
+
     def to_dict(self):
-        """
-        Convert telemetry into dictionary.
-        """
-
         return asdict(self)
-
     @classmethod
     def sample(cls):
         """

@@ -27,6 +27,7 @@ from backend.ground_station.session_manager import (
 from backend.ground_station.telemetry_store import (
     TelemetryStore
 )
+from backend.ground_station.log_store import LogStore
 router = APIRouter()
 handshake = HandshakeManager()
 CURRENT_SESSION = None
@@ -43,9 +44,10 @@ async def authenticate(
         request,
         CURRENT_SESSION
     )
-
 @router.post("/handshake/start")
 async def handshake_start():
+
+    print(">>> HANDSHAKE START CALLED")
 
     public_key = handshake.start()
 
@@ -53,30 +55,30 @@ async def handshake_start():
         "public_key": public_key.hex()
     }
 
-
 @router.post("/handshake/complete")
-async def handshake_complete(
-    request: HandshakeCompleteRequest
-):
+async def handshake_complete(request: HandshakeCompleteRequest):
+
+    print(">>> HANDSHAKE COMPLETE CALLED")
+    print(request)
 
     session_key = handshake.complete(
         bytes.fromhex(request.ciphertext)
     )
 
     class Session:
-
         def __init__(self, key):
-
             self.session_key = key
 
-    session = Session(
-        session_key
-    )
+    session = Session(session_key)
+
+    print(">>> CREATING SESSION")
 
     SessionManager.create(
         request.device_id,
         session
     )
+
+    print(">>> SESSION CREATED")
 
     return HandshakeCompleteResponse(
         status="success"
@@ -90,18 +92,24 @@ async def receive_telemetry(
     return GroundStationReceiver.receive(
         packet
     )
+
+
+from fastapi.encoders import jsonable_encoder
+
 @router.get("/telemetry/latest")
 async def latest_telemetry():
 
     latest = TelemetryStore.latest()
 
+    print("========== LATEST ==========")
+    print(type(latest))
+    print(latest)
+    print("============================")
+
     if latest is None:
+        return {"status": "No Telemetry"}
 
-        return {
-            "status": "No Telemetry"
-        }
-
-    return latest
+    return jsonable_encoder(latest)
 @router.get("/telemetry/history")
 async def telemetry_history():
 
@@ -109,12 +117,22 @@ async def telemetry_history():
 @router.get("/sessions")
 async def active_sessions():
 
-    return {
-        "active_sessions": SessionManager.all(),
-        "count": len(
-            SessionManager.all()
-        )
-    }
+    sessions = []
+
+    for info in SessionManager.all():
+
+        sessions.append({
+            "session_id": info.session_id,
+            "active": info.active,
+            "kem_algorithm": info.kem_algorithm,
+            "cipher": info.cipher,
+            "bytes_sent": info.bytes_sent,
+            "bytes_received": info.bytes_received,
+            "packets_dropped": info.packets_dropped,
+            "established_at": info.established_at
+        })
+
+    return sessions
 @router.get("/status")
 async def system_status():
 
@@ -122,11 +140,14 @@ async def system_status():
 
     return {
         "ground_station": "Running",
-        "active_sessions": len(
-            SessionManager.all()
-        ),
-        "telemetry_packets": len(
-            TelemetryStore.all()
-        ),
-        "latest_available": latest is not None
+        "drone_connection": "connected" if latest else "disconnected",
+        "telemetry_packets": len(TelemetryStore.all()),
+        "latest_available": latest is not None,
+        "active_sessions": len(SessionManager.all()),
+        "link_quality": 98,
+        "active_alarms": []
     }
+@router.get("/logs")
+async def logs():
+
+    return LogStore.all()

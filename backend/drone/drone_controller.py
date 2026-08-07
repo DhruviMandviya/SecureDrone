@@ -1,3 +1,4 @@
+import asyncio
 from mavsdk import System
 
 
@@ -8,6 +9,36 @@ class DroneController:
 
     def __init__(self, drone: System):
         self.drone = drone
+
+    async def demo_mission(self):
+        """
+        Autonomous demo mission.
+        """
+
+        print()
+        print("=" * 60)
+        print("AUTONOMOUS DEMO MISSION")
+        print("=" * 60)
+
+        await asyncio.sleep(2)
+
+        await self.arm()
+
+        await asyncio.sleep(3)
+
+        await self.takeoff()
+
+        print("Hovering...")
+        await asyncio.sleep(15)
+
+        await self.land()
+
+        print("Waiting for landing...")
+        await asyncio.sleep(15)
+
+        await self.disarm()
+
+        print("✓ Mission Completed")
 
     async def arm(self):
         """
@@ -34,16 +65,18 @@ class DroneController:
         await self.drone.action.takeoff()
 
         print("✓ Takeoff Command Sent")
+
     async def land(self):
-            """
-            Land the drone.
-            """
+        """
+        Land the drone.
+        """
 
-            print("Landing Drone...")
+        print("Landing Drone...")
 
-            await self.drone.action.land()
+        await self.drone.action.land()
 
-            print("✓ Landing Command Sent")
+        print("✓ Landing Command Sent")
+
     async def disarm(self):
         """
         Disarm the drone.

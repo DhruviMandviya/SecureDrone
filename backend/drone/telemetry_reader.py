@@ -1,7 +1,8 @@
 from mavsdk import System
 from backend.communication.telemetry import Telemetry
 from backend.drone.drone_state import DroneState
-
+from datetime import datetime
+from zoneinfo import ZoneInfo
 class TelemetryReader:
     """
     Reads live telemetry from the PX4 simulator.
@@ -64,19 +65,38 @@ class TelemetryReader:
         print("Creating telemetry...")
 
         telemetry = Telemetry(
-            latitude=position.latitude_deg,
-            longitude=position.longitude_deg,
-            altitude=position.relative_altitude_m,
-            velocity=(
-                velocity.north_m_s ** 2 +
-                velocity.east_m_s ** 2 +
-                velocity.down_m_s ** 2
-            ) ** 0.5,
-            battery=battery,
-            pitch=round(attitude.pitch_deg, 2),
-            roll=round(attitude.roll_deg, 2),
-            yaw=round(attitude.yaw_deg, 2)
-        )
+
+timestamp=datetime.now(
+    ZoneInfo("Asia/Kolkata")
+).isoformat(),
+    latitude=position.latitude_deg,
+
+    longitude=position.longitude_deg,
+
+    altitude=position.relative_altitude_m,
+
+    velocity=(
+
+        velocity.north_m_s**2 +
+        velocity.east_m_s**2 +
+        velocity.down_m_s**2
+
+    )**0.5,
+
+    battery=battery,
+
+    pitch=round(attitude.pitch_deg,2),
+
+    roll=round(attitude.roll_deg,2),
+
+    yaw=round(attitude.yaw_deg,2),
+
+    gps_sats=18,
+
+    mode="MISSION",
+
+    armed=False
+)
         self.state.connected = True
 
         self.state.latitude = telemetry.latitude
